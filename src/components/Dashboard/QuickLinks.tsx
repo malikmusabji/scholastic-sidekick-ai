@@ -6,12 +6,13 @@ import { Link, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import * as Icons from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LucideProps } from "lucide-react";
 
 const QuickLinks = () => {
-  // Dynamically get the icon component
+  // Dynamically get the icon component with proper typing
   const getIcon = (iconName: string) => {
-    const icon = Icons[iconName as keyof typeof Icons];
-    return icon ? React.createElement(icon, { size: 18 }) : <Link size={18} />;
+    const IconComponent = Icons[iconName as keyof typeof Icons] as React.ComponentType<LucideProps>;
+    return IconComponent ? <IconComponent size={18} /> : <Link size={18} />;
   };
 
   return (
