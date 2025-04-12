@@ -3,12 +3,37 @@ import React from "react";
 import { tasks } from "@/lib/data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Circle, Plus } from "lucide-react";
+import { CheckCircle2, Circle, Plus, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 const TaskList = () => {
   const [taskItems, setTaskItems] = React.useState(tasks);
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [newTask, setNewTask] = React.useState({
+    title: "",
+    priority: "medium" as "low" | "medium" | "high",
+  });
+  const { toast } = useToast();
 
   const toggleTaskCompletion = (id: string) => {
     setTaskItems(
@@ -16,6 +41,43 @@ const TaskList = () => {
         task.id === id ? { ...task, completed: !task.completed } : task
       )
     );
+    
+    const task = taskItems.find(t => t.id === id);
+    if (task) {
+      toast({
+        title: task.completed ? "Task reopened" : "Task completed",
+        description: task.title,
+        duration: 2000,
+      });
+    }
+  };
+
+  const handleAddTask = () => {
+    if (!newTask.title.trim()) {
+      toast({
+        title: "Error",
+        description: "Task title cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newTaskItem = {
+      id: `task${Date.now()}`,
+      title: newTask.title,
+      completed: false,
+      priority: newTask.priority,
+      dueDate: new Date(new Date().setDate(new Date().getDate() + 3)),
+    };
+
+    setTaskItems([newTaskItem, ...taskItems]);
+    setNewTask({ title: "", priority: "medium" });
+    setIsDialogOpen(false);
+    toast({
+      title: "Task created",
+      description: `"${newTask.title}" has been added to your tasks`,
+      duration: 2000,
+    });
   };
 
   // Only show first 4 tasks
@@ -31,10 +93,57 @@ const TaskList = () => {
     <Card className="dashboard-card h-full">
       <CardHeader className="dashboard-card-header">
         <CardTitle className="dashboard-card-title">Tasks</CardTitle>
-        <Button variant="outline" size="sm" className="h-8 gap-1">
-          <Plus size={14} />
-          <span>Add</span>
-        </Button>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="h-8 gap-1">
+              <Plus size={14} />
+              <span>Add</span>
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Add New Task</DialogTitle>
+              <DialogDescription>
+                Create a new task for your to-do list.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="task-title">Task Name</Label>
+                <Input
+                  id="task-title"
+                  value={newTask.title}
+                  onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+                  placeholder="Enter your task here..."
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="task-priority">Priority</Label>
+                <Select
+                  value={newTask.priority}
+                  onValueChange={(value: "low" | "medium" | "high") => 
+                    setNewTask({...newTask, priority: value})
+                  }
+                >
+                  <SelectTrigger id="task-priority">
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAddTask}>Add Task</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </CardHeader>
       <CardContent className="p-0">
         <div>

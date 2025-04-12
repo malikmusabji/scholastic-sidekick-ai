@@ -29,6 +29,22 @@ const DailySchedule = () => {
     }
   };
 
+  // Check if a time slot is current
+  const isCurrentTimeSlot = (startTime: string, endTime: string) => {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentTime = currentHour * 60 + currentMinute;
+    
+    const [startHour, startMinute] = startTime.split(":").map(Number);
+    const startTimeMinutes = startHour * 60 + startMinute;
+    
+    const [endHour, endMinute] = endTime.split(":").map(Number);
+    const endTimeMinutes = endHour * 60 + endMinute;
+    
+    return currentTime >= startTimeMinutes && currentTime <= endTimeMinutes;
+  };
+
   return (
     <Card className="dashboard-card h-full">
       <CardHeader className="dashboard-card-header">
@@ -36,31 +52,43 @@ const DailySchedule = () => {
       </CardHeader>
       <CardContent className="p-0">
         <div className="space-y-1">
-          {todaySchedule.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-start p-3 hover:bg-muted/50 transition-colors"
-            >
+          {todaySchedule.map((item) => {
+            const isCurrent = isCurrentTimeSlot(item.startTime, item.endTime);
+            
+            return (
               <div
+                key={item.id}
                 className={cn(
-                  "w-1 h-16 rounded-full mr-3 self-center",
-                  getCourseColor(item.course)
+                  "flex items-start p-3 hover:bg-muted/50 transition-colors",
+                  isCurrent && "bg-muted/30"
                 )}
-              />
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium">{item.title}</h4>
-                  <span className="text-sm text-muted-foreground">
-                    {item.startTime} - {item.endTime}
-                  </span>
-                </div>
-                <div className="flex items-center mt-1 text-sm text-muted-foreground">
-                  <MapPin size={14} className="mr-1" />
-                  <span>{item.location}</span>
+              >
+                <div
+                  className={cn(
+                    "w-1 h-16 rounded-full mr-3 self-center",
+                    getCourseColor(item.course)
+                  )}
+                />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium flex items-center gap-1">
+                      {item.title}
+                      {isCurrent && (
+                        <span className="inline-block w-2 h-2 bg-primary rounded-full animate-pulse" title="Current session" />
+                      )}
+                    </h4>
+                    <span className="text-sm text-muted-foreground">
+                      {item.startTime} - {item.endTime}
+                    </span>
+                  </div>
+                  <div className="flex items-center mt-1 text-sm text-muted-foreground">
+                    <MapPin size={14} className="mr-1" />
+                    <span>{item.location}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </CardContent>
     </Card>
